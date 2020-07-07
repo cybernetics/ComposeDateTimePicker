@@ -25,14 +25,14 @@ import kotlin.math.sin
 
 @Composable
 internal fun ButtonLayout(
-        modifier: Modifier = Modifier, confirmText: String = "Ok", onConfirm: () -> Unit = {},
-        onCancel: () -> Unit = {}
+    modifier: Modifier = Modifier, confirmText: String = "Ok", onConfirm: () -> Unit = {},
+    onCancel: () -> Unit = {}
 ) {
     Row(horizontalArrangement = Arrangement.End, modifier = modifier.fillMaxWidth().padding(8.dp)) {
-        TextButton(onClick = { onCancel() }, modifier = Modifier.ripple(color = Color.White)) {
+        TextButton(onClick = { onCancel() }) {
             Text("Cancel")
         }
-        TextButton(onClick = { onConfirm() }, modifier = Modifier.ripple(color = Color.White)) {
+        TextButton(onClick = { onConfirm() }) {
             Text(confirmText)
         }
     }
@@ -41,12 +41,12 @@ internal fun ButtonLayout(
 @Composable
 internal fun DialogTitle(text: String, modifier: Modifier = Modifier) {
     Text(
-            text,
-            modifier = modifier.fillMaxWidth()
-                    .wrapContentWidth(Alignment.CenterHorizontally),
-            color = MaterialTheme.colors.onBackground,
-            fontSize = 20.sp,
-            style = TextStyle(fontWeight = FontWeight.W600)
+        text,
+        modifier = modifier.fillMaxWidth()
+            .wrapContentWidth(Alignment.CenterHorizontally),
+        color = MaterialTheme.colors.onBackground,
+        fontSize = 20.sp,
+        style = TextStyle(fontWeight = FontWeight.W600)
     )
 }
 
@@ -64,7 +64,7 @@ internal fun ThemedDialog(onCloseRequest: () -> Unit, children: @Composable() ()
 
 
 internal fun Float.getOffset(angle: Double): Offset =
-        Offset((this * cos(angle)).toFloat(), (this * sin(angle)).toFloat())
+    Offset((this * cos(angle)).toFloat(), (this * sin(angle)).toFloat())
 
 internal val LocalDate.yearMonth: YearMonth
     get() = YearMonth.of(this.year, this.month)

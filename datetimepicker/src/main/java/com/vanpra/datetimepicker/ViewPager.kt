@@ -5,25 +5,20 @@ import androidx.animation.AnimatedFloat
 import androidx.animation.AnimationEndReason
 import androidx.animation.PhysicsBuilder
 import androidx.compose.Composable
+import androidx.compose.key
 import androidx.compose.state
 import androidx.ui.animation.animatedFloat
-import androidx.ui.core.DensityAmbient
-import androidx.ui.core.Modifier
-import androidx.ui.core.WithConstraints
-import androidx.ui.core.drawOpacity
+import androidx.ui.core.*
 import androidx.ui.foundation.Box
-import androidx.ui.foundation.HorizontalScroller
 import androidx.ui.foundation.InteractionState
 import androidx.ui.foundation.animation.AnchorsFlingConfig
 import androidx.ui.foundation.animation.fling
 import androidx.ui.foundation.gestures.DragDirection
 import androidx.ui.foundation.gestures.draggable
 import androidx.ui.graphics.Color
-import androidx.ui.layout.Row
-import androidx.ui.layout.offset
-import androidx.ui.layout.preferredWidth
+import androidx.ui.layout.fillMaxSize
 import androidx.ui.unit.Dp
-import kotlin.math.abs
+import androidx.ui.util.fastForEach
 import kotlin.math.sign
 
 interface ViewPagerScope {
@@ -57,7 +52,7 @@ fun ViewPager(
     useAlpha: Boolean = false,
     range: IntRange = IntRange.EMPTY,
     enabled: Boolean = true,
-    screenItem: @Composable() ViewPagerScope.() -> Unit
+    screenItem: @Composable() ViewPagerScope.(page: Int) -> Unit
 ) {
     Box(backgroundColor = Color.Transparent) {
         WithConstraints {
@@ -109,38 +104,63 @@ fun ViewPager(
                 enabled = enabled
             )
 
-            if (useAlpha) {
-                if (offset.value < width) {
-                    alphas.value[0] = 1 - offset.value / width
-                } else if (offset.value > width) {
-                    alphas.value[2] = ((offset.value - width) / width)
-                }
+//            if (useAlpha) {
+//                if (offset.value < width) {
+//                    alphas.value[0] = 1 - offset.value / width
+//                } else if (offset.value > width) {
+//                    alphas.value[2] = ((offset.value - width) / width)
+//                }
+//                alphas.value[1] = 1 - abs(offset.value - width) / width
+//            }
 
-                alphas.value[1] = 1 - abs(offset.value - width) / width
-            }
 
-            HorizontalScroller(isScrollable = false) {
-                Row(
-                    draggable.preferredWidth(maxWidth * 3)
-                        .offset(-offset.toDp())
-                ) {
-                    for (x in -1..1) {
-                        Box(
-                            Modifier.preferredWidth(maxWidth).drawOpacity(alphas.value[x + 1])
-                        ) {
-                            if ((offset.value < width && x == -1) || x == 0 || (offset.value > width && x == 1)) {
-                                val viewPagerImpl =
-                                    ViewPagerImpl(
-                                        index.value + x,
-                                        interactionState,
-                                        increment
-                                    )
-                                screenItem(viewPagerImpl)
-                            }
+            Layout(children = {
+                for (x in -1..1) {
+                    key(x) {
+                        Box(Modifier.fillMaxSize()) {
+                            screenItem(
+                                ViewPagerImpl(index.value + x, interactionState, increment),
+                                index.value + x
+                            )
                         }
                     }
                 }
+            }, modifier = draggable) { measurables, constraints, _ ->
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    measurables
+                        .map { it.measure(constraints) to it.tag }
+                        .fastForEach { (placeable, tag) ->
+                            println(tag)
+                            placeable.place(
+                                x = 0,
+                                y = 0
+                            )
+                        }
+                }
             }
+
+//            HorizontalScroller(isScrollable = false) {
+//                Row(
+//                    draggable.preferredWidth(maxWidth * 3)
+//                        .offset(-offset.toDp())
+//                ) {
+//                    for (x in -1..1) {
+//                        Box(
+//                            Modifier.preferredWidth(maxWidth).drawOpacity(alphas.value[x + 1])
+//                        ) {
+//                            if ((offset.value < width && x == -1) || x == 0 || (offset.value > width && x == 1)) {
+//                                val viewPagerImpl =
+//                                    ViewPagerImpl(
+//                                        index.value + x,
+//                                        interactionState,
+//                                        increment
+//                                    )
+//                                screenItem(viewPagerImpl)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
     }
 }

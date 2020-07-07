@@ -18,7 +18,11 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun DateTimePicker(showing: MutableState<Boolean>, onComplete: (LocalDateTime) -> Unit) {
+fun DateTimePicker(
+    showing: MutableState<Boolean>,
+    onComplete: (LocalDateTime) -> Unit,
+    onCancel: () -> Unit
+) {
     val currentDate = remember { LocalDate.now() }
     val selectedDate = state { currentDate }
 
@@ -36,16 +40,16 @@ fun DateTimePicker(showing: MutableState<Boolean>, onComplete: (LocalDateTime) -
                     WithConstraints {
                         val ratio = scrollerPosition.value / constraints.maxWidth
                         Image(
-                                Icons.Default.ArrowBack,
-                                colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground),
-                                modifier = Modifier.padding(start = 16.dp)
-                                        .clip(CircleShape)
-                                        .ripple()
-                                        .clickable(onClick = {
-                                            scrollerPosition.smoothScrollTo(0f)
-                                            currentScreen.value = 0
-                                        })
-                                        .drawOpacity(1f * ratio)
+                            Icons.Default.ArrowBack,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground),
+                            modifier = Modifier.padding(start = 16.dp)
+                                .clip(CircleShape)
+                                .ripple()
+                                .clickable(onClick = {
+                                    scrollerPosition.smoothScrollTo(0f)
+                                    currentScreen.value = 0
+                                })
+                                .drawOpacity(1f * ratio)
                         )
                     }
                     DialogTitle("Select Date and Time")
@@ -58,14 +62,14 @@ fun DateTimePicker(showing: MutableState<Boolean>, onComplete: (LocalDateTime) -
                         Canvas(modifier = Modifier) {
                             val offset = Offset(30f, 0f)
                             drawCircle(
-                                    color.copy(0.7f + 0.3f * (1 - ratio)),
-                                    radius = 8f + 7f * (1 - ratio),
-                                    center = center - offset
+                                color.copy(0.7f + 0.3f * (1 - ratio)),
+                                radius = 8f + 7f * (1 - ratio),
+                                center = center - offset
                             )
                             drawCircle(
-                                    color.copy(0.7f + 0.3f * ratio),
-                                    radius = 8f + 7f * ratio,
-                                    center = center + offset
+                                color.copy(0.7f + 0.3f * ratio),
+                                radius = 8f + 7f * ratio,
+                                center = center + offset
                             )
                         }
                     }
@@ -75,34 +79,35 @@ fun DateTimePicker(showing: MutableState<Boolean>, onComplete: (LocalDateTime) -
                     scrollTo.value = constraints.maxWidth.toFloat()
                     HorizontalScroller(isScrollable = false, scrollerPosition = scrollerPosition) {
                         DatePickerLayout(
-                                Modifier.padding(top = 16.dp).preferredWidth(maxWidth),
-                                selectedDate,
-                                currentDate
+                            Modifier.padding(top = 16.dp).preferredWidth(maxWidth),
+                            selectedDate,
+                            currentDate
                         )
                         TimePickerLayout(
-                                Modifier.padding(top = 16.dp).preferredWidth(maxWidth),
-                                selectedTime
+                            Modifier.padding(top = 16.dp).preferredWidth(maxWidth),
+                            selectedTime
                         )
                     }
 
                 }
 
                 ButtonLayout(
-                        confirmText = if (currentScreen.value == 0) {
-                            "Next"
-                        } else {
-                            "Ok"
-                        }, onConfirm = {
-                    if (currentScreen.value == 0) {
-                        scrollerPosition.smoothScrollTo(scrollTo.value)
-                        currentScreen.value = 1
+                    confirmText = if (currentScreen.value == 0) {
+                        "Next"
                     } else {
+                        "Ok"
+                    }, onConfirm = {
+                        if (currentScreen.value == 0) {
+                            scrollerPosition.smoothScrollTo(scrollTo.value)
+                            currentScreen.value = 1
+                        } else {
+                            showing.value = false
+                            onComplete(LocalDateTime.of(selectedDate.value, selectedTime.value))
+                        }
+                    }, onCancel = {
                         showing.value = false
-                        onComplete(LocalDateTime.of(selectedDate.value, selectedTime.value))
-                    }
-                }, onCancel = {
-                    showing.value = false
-                })
+                        onCancel()
+                    })
 
             }
         }

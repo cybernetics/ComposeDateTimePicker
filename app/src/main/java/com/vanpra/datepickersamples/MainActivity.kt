@@ -3,15 +3,18 @@ package com.vanpra.datepickersamples
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.state
-import androidx.ui.animation.animate
-import androidx.ui.core.*
+import androidx.ui.core.Alignment
+import androidx.ui.core.Modifier
+import androidx.ui.core.setContent
 import androidx.ui.foundation.Text
 import androidx.ui.foundation.drawBackground
 import androidx.ui.graphics.Color
 import androidx.ui.layout.*
 import androidx.ui.material.*
 import androidx.ui.unit.dp
-import com.vanpra.datetimepicker.*
+import com.vanpra.datetimepicker.DatePicker
+import com.vanpra.datetimepicker.DateTimePicker
+import com.vanpra.datetimepicker.TimePicker
 
 class MainActivity : AppCompatActivity() {
     private val lightTheme = lightColorPalette(onPrimary = Color.White, primary = Color.Blue)
@@ -32,15 +35,18 @@ class MainActivity : AppCompatActivity() {
 
                 DateTimePicker(
                     showing = showingDateTime,
-                    onComplete = { selectedDate.value = it.toString() })
+                    onComplete = { selectedDate.value = it.toString() },
+                    onCancel = {})
 
                 DatePicker(
                     showing = showingDate,
-                    onComplete = { selectedDate.value = it.toString() })
+                    onComplete = { selectedDate.value = it.toString() },
+                    onCancel = {})
 
                 TimePicker(
                     showing = showingTime,
-                    onComplete = { selectedDate.value = it.toString() })
+                    onComplete = { selectedDate.value = it.toString() },
+                    onCancel = {})
 
                 Column(Modifier.drawBackground(currentTheme.value.background).fillMaxSize()) {
                     Row(Modifier.padding(8.dp)) {

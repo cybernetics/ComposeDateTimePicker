@@ -35,7 +35,8 @@ import java.time.YearMonth
 @Composable
 fun DatePicker(
         showing: MutableState<Boolean>,
-        onComplete: (LocalDate) -> Unit
+        onComplete: (LocalDate) -> Unit,
+        onCancel: () -> Unit
 ) {
     val currentDate = remember { LocalDate.now() }
     val selectedDate = state { currentDate }
@@ -50,6 +51,10 @@ fun DatePicker(
                         onConfirm = {
                             showing.value = false
                             onComplete(selectedDate.value)
+                        },
+                        onCancel = {
+                            showing.value = false
+                            onCancel()
                         })
             }
         }
