@@ -17,12 +17,23 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
+/**
+ * @brief A date time picker dialog
+ *
+ * @param showing mutable state which controls if the dialog is showing to the user
+ * @param initialDateTime The date and time to be shown to the user when the dialog is first shown.
+ * Defaults to the current date and time if this is not set
+ * @param onComplete callback with a LocalDateTime object when the user completes their input
+ */
+
 @Composable
-fun DateTimePicker(showing: MutableState<Boolean>, onComplete: (LocalDateTime) -> Unit) {
-    val currentDate = remember { LocalDate.now() }
+fun DateTimePicker(showing: MutableState<Boolean>,
+                   initialDateTime: LocalDateTime = LocalDateTime.now(),
+                   onComplete: (LocalDateTime) -> Unit) {
+    val currentDate =  initialDateTime.toLocalDate()
     val selectedDate = state { currentDate }
 
-    val currentTime = remember { LocalTime.now().truncatedTo(ChronoUnit.MINUTES) }
+    val currentTime = remember { initialDateTime.toLocalTime().truncatedTo(ChronoUnit.MINUTES) }
     val selectedTime = state { currentTime }
 
     if (showing.value) {
@@ -40,7 +51,6 @@ fun DateTimePicker(showing: MutableState<Boolean>, onComplete: (LocalDateTime) -
                                 colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground),
                                 modifier = Modifier.padding(start = 16.dp)
                                         .clip(CircleShape)
-                                        .ripple()
                                         .clickable(onClick = {
                                             scrollerPosition.smoothScrollTo(0f)
                                             currentScreen.value = 0

@@ -32,12 +32,21 @@ import androidx.ui.util.fastForEach
 import java.time.LocalDate
 import java.time.YearMonth
 
+/**
+ * @brief A date picker dialog
+ *
+ * @param showing mutable state which controls if the dialog is showing to the user
+ * @param initialDate The time to be shown to the user when the dialog is first shown.
+ * Defaults to the current date if this is not set
+ * @param onComplete callback with a LocalDate object when the user completes their input
+ */
 @Composable
 fun DatePicker(
         showing: MutableState<Boolean>,
+        initialDate: LocalDate = LocalDate.now(),
         onComplete: (LocalDate) -> Unit
 ) {
-    val currentDate = remember { LocalDate.now() }
+    val currentDate = remember { initialDate }
     val selectedDate = state { currentDate }
 
     if (showing.value) {
