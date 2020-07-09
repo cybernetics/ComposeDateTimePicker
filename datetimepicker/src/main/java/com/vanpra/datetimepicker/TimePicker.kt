@@ -35,9 +35,22 @@ data class SelectedOffset(
     val selectedOffset: Offset = Offset.Zero
 )
 
+/**
+ * @brief A time picker dialog
+ *
+ * @param showing mutable state which controls if the dialog is showing to the user
+ * @param initialTime The time to be shown to the user when the dialog is first shown.
+ * Defaults to the current time if this is not set
+ * @param onComplete callback with a LocalTime object when the user completes their input
+ */
 @Composable
-fun TimePicker(showing: MutableState<Boolean>, onComplete: (LocalTime) -> Unit, onCancel: () -> Unit) {
-    val currentTime = remember { LocalTime.now().truncatedTo(ChronoUnit.MINUTES) }
+fun TimePicker(
+    showing: MutableState<Boolean>,
+    initialTime: LocalTime = LocalTime.now(),
+    onCancel: () -> Unit,
+    onComplete: (LocalTime) -> Unit
+) {
+    val currentTime = remember { initialTime.truncatedTo(ChronoUnit.MINUTES) }
     val selectedTime = state { currentTime }
 
     if (showing.value) {

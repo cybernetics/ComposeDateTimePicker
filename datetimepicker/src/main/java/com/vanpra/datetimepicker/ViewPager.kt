@@ -1,29 +1,28 @@
 package com.vanpra.datetimepicker
 
 
-import androidx.animation.AnimatedFloat
 import androidx.animation.AnimationEndReason
 import androidx.animation.PhysicsBuilder
 import androidx.compose.Composable
-import androidx.compose.key
+import androidx.compose.onPreCommit
+import androidx.compose.remember
 import androidx.compose.state
 import androidx.ui.animation.animatedFloat
 import androidx.ui.core.*
 import androidx.ui.foundation.Box
-import androidx.ui.foundation.InteractionState
 import androidx.ui.foundation.animation.AnchorsFlingConfig
 import androidx.ui.foundation.animation.fling
 import androidx.ui.foundation.gestures.DragDirection
 import androidx.ui.foundation.gestures.draggable
 import androidx.ui.graphics.Color
-import androidx.ui.layout.fillMaxSize
-import androidx.ui.unit.Dp
 import androidx.ui.util.fastForEach
+import androidx.ui.util.fastMap
+import androidx.ui.util.fastMaxBy
+import kotlin.math.abs
 import kotlin.math.sign
 
 interface ViewPagerScope {
     val index: Int
-    val interactionState: InteractionState
 
     fun next()
     fun previous()
@@ -31,7 +30,6 @@ interface ViewPagerScope {
 
 private data class ViewPagerImpl(
     override val index: Int,
-    override val interactionState: InteractionState,
     val increment: (Int) -> Unit
 ) : ViewPagerScope {
     override fun next() {
@@ -50,35 +48,50 @@ fun ViewPager(
     onNext: () -> Unit = {},
     onPrevious: () -> Unit = {},
     useAlpha: Boolean = false,
-    range: IntRange = IntRange.EMPTY,
     enabled: Boolean = true,
     screenItem: @Composable() ViewPagerScope.(page: Int) -> Unit
 ) {
     Box(backgroundColor = Color.Transparent) {
         WithConstraints {
-            val alphas = state { mutableListOf(1f, 1f, 1f) }
+            val alphas = remember { mutableListOf(1f, 1f, 1f) }
             val width = constraints.maxWidth.toFloat()
             val offset = animatedFloat(width)
             offset.setBounds(0f, 2 * width)
 
-            val anchors = listOf(0f, width, 2 * width)
+            val anchors = remember { listOf(0f, width, 2 * width) }
             val index = state { 0 }
 
             val flingConfig = AnchorsFlingConfig(anchors,
-                animationBuilder = PhysicsBuilder(dampingRatio = 0.8f, stiffness = 1000f),
+                animationBuilder = PhysicsBuilder(dampingRatio = 0.9f),
                 onAnimationEnd = { reason, end, _ ->
-                    offset.snapTo(width)
-
                     if (reason != AnimationEndReason.Interrupted) {
                         if (end == width * 2) {
-                            index.value += 1
                             onNext()
+                            index.value += 1
                         } else if (end == 0f) {
-                            index.value -= 1
                             onPrevious()
+                            index.value -= 1
                         }
                     }
                 })
+
+            onPreCommit(index.value) {
+                alphas.forEachIndexed { index, it ->
+                    alphas[index] = 1f
+                }
+                offset.snapTo(width)
+            }
+
+            onPreCommit(offset.value) {
+                if (useAlpha && !anchors.contains(offset.value)) {
+                    if (offset.value < width) {
+                        alphas[0] = 1 - offset.value / width
+                    } else if (offset.value > width) {
+                        alphas[2] = ((offset.value - width) / width)
+                    }
+                    alphas[1] = 1 - abs(offset.value - width) / width
+                }
+            }
 
             val increment = { increment: Int ->
                 offset.animateTo(
@@ -86,84 +99,47 @@ fun ViewPager(
                     onEnd = { animationEndReason, _ ->
                         if (animationEndReason != AnimationEndReason.Interrupted) {
                             index.value += increment
-                            offset.snapTo(width)
                         }
                     })
             }
 
-            val interactionState = InteractionState()
+            println("RECOMPOSITION")
 
             val draggable = modifier.draggable(
                 dragDirection = DragDirection.Horizontal,
                 onDragDeltaConsumptionRequested = {
                     val old = offset.value
-                    offset.snapTo(offset.value - (it * 0.5f))
+                    offset.snapTo(offset.value - (it * 0.55f))
                     offset.value - old
-                }, onDragStopped = { offset.fling(flingConfig, -(it * 0.6f)) },
-                interactionState = interactionState,
+                }, onDragStopped = { offset.fling(flingConfig, -it) },
                 enabled = enabled
             )
 
-//            if (useAlpha) {
-//                if (offset.value < width) {
-//                    alphas.value[0] = 1 - offset.value / width
-//                } else if (offset.value > width) {
-//                    alphas.value[2] = ((offset.value - width) / width)
-//                }
-//                alphas.value[1] = 1 - abs(offset.value - width) / width
-//            }
-
-
             Layout(children = {
                 for (x in -1..1) {
-                    key(x) {
-                        Box(Modifier.fillMaxSize()) {
-                            screenItem(
-                                ViewPagerImpl(index.value + x, interactionState, increment),
-                                index.value + x
-                            )
-                        }
+                    Box(Modifier.tag(x + 1).drawOpacity(alphas[x + 1])) {
+                        screenItem(
+                            ViewPagerImpl(index.value + x, increment),
+                            index.value + x
+                        )
                     }
                 }
-            }, modifier = draggable) { measurables, constraints, _ ->
-                layout(constraints.maxWidth, constraints.maxHeight) {
+            }, modifier = draggable) { measurables, constraints, layoutDirection ->
+                val height =
+                    measurables.fastMap { it.maxIntrinsicHeight(constraints.maxHeight) }.max() ?: 0
+                layout(constraints.maxWidth, height) {
                     measurables
-                        .map { it.measure(constraints) to it.tag }
+                        .fastMap { it.measure(constraints) to it.tag }
                         .fastForEach { (placeable, tag) ->
-                            println(tag)
-                            placeable.place(
-                                x = 0,
-                                y = 0
-                            )
+                            if (tag is Int) {
+                                placeable.place(
+                                    x = (constraints.maxWidth * tag) - offset.value.toInt(),
+                                    y = 0
+                                )
+                            }
                         }
                 }
             }
-
-//            HorizontalScroller(isScrollable = false) {
-//                Row(
-//                    draggable.preferredWidth(maxWidth * 3)
-//                        .offset(-offset.toDp())
-//                ) {
-//                    for (x in -1..1) {
-//                        Box(
-//                            Modifier.preferredWidth(maxWidth).drawOpacity(alphas.value[x + 1])
-//                        ) {
-//                            if ((offset.value < width && x == -1) || x == 0 || (offset.value > width && x == 1)) {
-//                                val viewPagerImpl =
-//                                    ViewPagerImpl(
-//                                        index.value + x,
-//                                        interactionState,
-//                                        increment
-//                                    )
-//                                screenItem(viewPagerImpl)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
         }
     }
 }
-
-@Composable
-fun AnimatedFloat.toDp(): Dp = with(DensityAmbient.current) { this@toDp.value.toDp() }

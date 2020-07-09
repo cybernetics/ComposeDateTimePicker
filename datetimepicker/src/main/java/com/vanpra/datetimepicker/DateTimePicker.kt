@@ -10,23 +10,30 @@ import androidx.ui.layout.*
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.ArrowBack
-import androidx.ui.material.ripple.ripple
 import androidx.ui.unit.dp
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.temporal.ChronoUnit
+
+/**
+ * @brief A date time picker dialog
+ *
+ * @param showing mutable state which controls if the dialog is showing to the user
+ * @param initialDateTime The date and time to be shown to the user when the dialog is first shown.
+ * Defaults to the current date and time if this is not set
+ * @param onComplete callback with a LocalDateTime object when the user completes their input
+ */
 
 @Composable
 fun DateTimePicker(
     showing: MutableState<Boolean>,
-    onComplete: (LocalDateTime) -> Unit,
-    onCancel: () -> Unit
+    initialDateTime: LocalDateTime = LocalDateTime.now(),
+    onCancel: () -> Unit,
+    onComplete: (LocalDateTime) -> Unit
 ) {
-    val currentDate = remember { LocalDate.now() }
+    val currentDate = initialDateTime.toLocalDate()
     val selectedDate = state { currentDate }
 
-    val currentTime = remember { LocalTime.now().truncatedTo(ChronoUnit.MINUTES) }
+    val currentTime = remember { initialDateTime.toLocalTime().truncatedTo(ChronoUnit.MINUTES) }
     val selectedTime = state { currentTime }
 
     if (showing.value) {
@@ -44,7 +51,6 @@ fun DateTimePicker(
                             colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground),
                             modifier = Modifier.padding(start = 16.dp)
                                 .clip(CircleShape)
-                                .ripple()
                                 .clickable(onClick = {
                                     scrollerPosition.smoothScrollTo(0f)
                                     currentScreen.value = 0
