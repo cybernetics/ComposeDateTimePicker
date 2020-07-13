@@ -1,10 +1,7 @@
 package com.vanpra.datetimepicker
 
 
-import androidx.compose.Composable
-import androidx.compose.MutableState
-import androidx.compose.remember
-import androidx.compose.state
+import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.clip
@@ -14,13 +11,10 @@ import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.ColorFilter
 import androidx.ui.layout.*
-import androidx.ui.layout.ColumnScope.gravity
-import androidx.ui.material.ColorPalette
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.ChevronLeft
 import androidx.ui.material.icons.filled.ChevronRight
-import androidx.ui.material.ripple.ripple
 import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight.Companion.W400
 import androidx.ui.text.font.FontWeight.Companion.W500
@@ -32,6 +26,8 @@ import androidx.ui.util.fastForEach
 import java.time.LocalDate
 import java.time.YearMonth
 
+val dateBoxDp = 35.dp
+
 /**
  * @brief A date picker dialog
  *
@@ -42,12 +38,17 @@ import java.time.YearMonth
  */
 @Composable
 fun DatePicker(
-        showing: MutableState<Boolean>,
-        initialDate: LocalDate = LocalDate.now(),
-        onComplete: (LocalDate) -> Unit
+    showing: MutableState<Boolean>,
+    initialDate: LocalDate = LocalDate.now(),
+    onCancel: () -> Unit = {},
+    onComplete: (LocalDate) -> Unit = {}
 ) {
     val currentDate = remember { initialDate }
     val selectedDate = state { currentDate }
+
+    onCommit(showing.value) {
+        selectedDate.value = currentDate
+    }
 
     if (showing.value) {
         ThemedDialog(onCloseRequest = { showing.value = false }) {
@@ -55,14 +56,15 @@ fun DatePicker(
                 DialogTitle("Select a date", Modifier.padding(top = 16.dp, bottom = 16.dp))
                 DatePickerLayout(currentDate = currentDate, selectedDate = selectedDate)
                 ButtonLayout(
-                        confirmText = "Ok",
-                        onConfirm = {
-                            showing.value = false
-                            onComplete(selectedDate.value)
-                        },
-                        onCancel = {
-                            showing.value = false        
-                        }
+                    confirmText = "Ok",
+                    onConfirm = {
+                        showing.value = false
+                        onComplete(selectedDate.value)
+                    },
+                    onCancel = {
+                        showing.value = false
+                        onCancel()
+                    }
                 )
             }
         }
@@ -71,9 +73,9 @@ fun DatePicker(
 
 @Composable
 internal fun DatePickerLayout(
-        modifier: Modifier = Modifier,
-        selectedDate: MutableState<LocalDate>,
-        currentDate: LocalDate
+    modifier: Modifier = Modifier,
+    selectedDate: MutableState<LocalDate>,
+    currentDate: LocalDate
 ) {
     Column(modifier.drawBackground(MaterialTheme.colors.background)) {
         DateTitle(selectedDate)
@@ -95,7 +97,11 @@ internal fun DatePickerLayout(
 
 //TODO Replace for loops with Table API when it returns
 @Composable
-private fun DateLayout(month: List<List<String>>, yearMonth: YearMonth, selected: MutableState<LocalDate>) {
+private fun DateLayout(
+    month: List<List<String>>,
+    yearMonth: YearMonth,
+    selected: MutableState<LocalDate>
+) {
     val check = remember(selected.value, yearMonth) {
         selected.value.monthValue == yearMonth.monthValue
                 && selected.value.year == yearMonth.year
@@ -104,10 +110,9 @@ private fun DateLayout(month: List<List<String>>, yearMonth: YearMonth, selected
     val textStyle = TextStyle(fontSize = 12.sp, fontWeight = W400)
     month.fastForEach {
         Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, start = 10.dp, end = 10.dp)
-                        .gravity(Alignment.CenterHorizontally)
-                        .fillMaxWidth()
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp, start = 18.dp, end = 18.dp)
         ) {
             it.fastForEach { date ->
                 var selectedModifier: Modifier = Modifier
@@ -116,25 +121,25 @@ private fun DateLayout(month: List<List<String>>, yearMonth: YearMonth, selected
 
                 if (check && enabled && selected.value.dayOfMonth == date.toInt()) {
                     selectedModifier = Modifier.drawBackground(
-                            MaterialTheme.colors.primary.copy(0.7f), CircleShape
+                        MaterialTheme.colors.primary.copy(0.7f), CircleShape
                     )
                     textColor = Color.White
                 }
 
                 Box(
-                        modifier = selectedModifier.preferredSize(40.dp).clip(CircleShape)
-                                .clickable(onClick = {
-                                    selected.value =
-                                            LocalDate.of(yearMonth.year, yearMonth.month, date.toInt())
-                                }, enabled = enabled)
+                    modifier = selectedModifier.preferredSize(dateBoxDp).clip(CircleShape)
+                        .clickable(onClick = {
+                            selected.value =
+                                LocalDate.of(yearMonth.year, yearMonth.month, date.toInt())
+                        }, enabled = enabled, indication = null)
                 ) {
                     if (enabled) {
                         Text(
-                                date,
-                                modifier = Modifier.fillMaxSize()
-                                        .wrapContentSize(Alignment.Center),
-                                style = textStyle,
-                                color = textColor
+                            date,
+                            modifier = Modifier.fillMaxSize()
+                                .wrapContentSize(Alignment.Center),
+                            style = textStyle,
+                            color = textColor
                         )
                     }
                 }
@@ -146,17 +151,20 @@ private fun DateLayout(month: List<List<String>>, yearMonth: YearMonth, selected
 @Composable
 private fun DaysTitle() {
     Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.padding(top = 16.dp, bottom = 12.dp)
-                    .fillMaxWidth()
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.padding(top = 16.dp, bottom = 12.dp, start = 18.dp, end = 18.dp)
+            .fillMaxWidth()
     ) {
         listOf("M", "T", "W", "T", "F", "S", "S").fastForEach {
-            Text(
+            Box(Modifier.preferredSize(dateBoxDp)) {
+                Text(
                     it,
-                    modifier = Modifier.drawOpacity(0.8f),
+                    modifier = Modifier.drawOpacity(0.8f).fillMaxSize()
+                        .wrapContentSize(Alignment.Center),
                     style = TextStyle(fontSize = 14.sp, fontWeight = W600),
                     color = MaterialTheme.colors.onBackground
-            )
+                )
+            }
         }
     }
 }
@@ -165,37 +173,37 @@ private fun DaysTitle() {
 private fun MonthTitle(scope: ViewPagerScope, month: String, year: String) {
     Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
         Box(
-                Modifier.clip(CircleShape).ripple(color = Color.White)
-                        .clickable(
-                                onClick = { scope.previous() },
-                                enabled = true
-                        )
+            Modifier.clip(CircleShape)
+                .clickable(
+                    onClick = { scope.previous() },
+                    enabled = true
+                )
         ) {
             Image(
-                    Icons.Default.ChevronLeft,
-                    modifier = Modifier.padding(start = 24.dp).wrapContentWidth(Alignment.Start),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                Icons.Default.ChevronLeft,
+                modifier = Modifier.padding(start = 24.dp).wrapContentWidth(Alignment.Start),
+                colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
             )
         }
 
         Text(
-                "$month $year",
-                modifier = Modifier.weight(3f).wrapContentSize(Alignment.Center),
-                style = TextStyle(fontSize = 16.sp, fontWeight = W500),
-                color = MaterialTheme.colors.onBackground
+            "$month $year",
+            modifier = Modifier.weight(3f).wrapContentSize(Alignment.Center),
+            style = TextStyle(fontSize = 16.sp, fontWeight = W500),
+            color = MaterialTheme.colors.onBackground
         )
 
         Box(
-                Modifier.clip(CircleShape).ripple(color = Color.White)
-                        .clickable(
-                                onClick = { scope.next() },
-                                enabled = true
-                        )
+            Modifier.clip(CircleShape)
+                .clickable(
+                    onClick = { scope.next() },
+                    enabled = true
+                )
         ) {
             Image(
-                    Icons.Default.ChevronRight,
-                    modifier = Modifier.padding(end = 24.dp).wrapContentWidth(Alignment.End),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                Icons.Default.ChevronRight,
+                modifier = Modifier.padding(end = 24.dp).wrapContentWidth(Alignment.End),
+                colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
             )
         }
     }
@@ -209,14 +217,14 @@ private fun DateTitle(selected: MutableState<LocalDate>) {
     Box(backgroundColor = MaterialTheme.colors.primary, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                    text = selected.value.year.toString(), color = MaterialTheme.colors.onPrimary,
-                    modifier = Modifier.drawOpacity(0.8f).padding(bottom = 2.dp),
-                    style = TextStyle(fontSize = 18.sp, fontWeight = W700)
+                text = selected.value.year.toString(), color = MaterialTheme.colors.onPrimary,
+                modifier = Modifier.drawOpacity(0.8f).padding(bottom = 2.dp),
+                style = TextStyle(fontSize = 18.sp, fontWeight = W700)
             )
             Text(
-                    text = "$day, $month ${selected.value.dayOfMonth}",
-                    color = MaterialTheme.colors.onPrimary,
-                    style = TextStyle(fontSize = 26.sp, fontWeight = W700)
+                text = "$day, $month ${selected.value.dayOfMonth}",
+                color = MaterialTheme.colors.onPrimary,
+                style = TextStyle(fontSize = 26.sp, fontWeight = W700)
             )
         }
     }

@@ -15,9 +15,7 @@ import androidx.ui.unit.dp
 import com.vanpra.datetimepicker.DatePicker
 import com.vanpra.datetimepicker.DateTimePicker
 import com.vanpra.datetimepicker.TimePicker
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 class MainActivity : AppCompatActivity() {
     private val lightTheme = lightColorPalette(onPrimary = Color.White, primary = Color.Blue)
@@ -40,19 +38,19 @@ class MainActivity : AppCompatActivity() {
 
                 DateTimePicker(
                     showing = showingDateTime,
-                    initialDateTime = selectedDateTime.value,
-                    onComplete = {
-                        selectedDate.value = it.toString()
-                        selectedDateTime.value = it
-                    })
+                    initialDateTime = selectedDateTime.value
+                ) {
+                    selectedDate.value = it.toString()
+                    selectedDateTime.value = it
+                }
 
-                DatePicker(
-                    showing = showingDate,
-                    onComplete = { selectedDate.value = it.toString() })
+                DatePicker(showing = showingDate) {
+                    selectedDate.value = it.toString()
+                }
 
-                TimePicker(
-                    showing = showingTime,
-                    onComplete = { selectedDate.value = it.toString() })
+                TimePicker(showing = showingTime) {
+                    selectedDate.value = it.toString()
+                }
 
                 Column(Modifier.drawBackground(currentTheme.value.background).fillMaxSize()) {
                     Row(Modifier.padding(8.dp)) {

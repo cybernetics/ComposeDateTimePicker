@@ -4,17 +4,17 @@
 
 ## Download
 
-[ ![Download](https://api.bintray.com/packages/vanpra/ComposeDateTimePicker/datetimepicker/images/download.svg?version=0.1.2) ](https://bintray.com/vanpra/ComposeDateTimePicker/datetimepicker/0.1.2/link)
+[ ![Download](https://api.bintray.com/packages/vanpra/ComposeDateTimePicker/datetimepicker/images/download.svg?version=0.1.3) ](https://bintray.com/vanpra/ComposeDateTimePicker/datetimepicker/0.1.3/link)
 
 ```gradle
 dependencies {
   ...
-  implementation 'com.vanpra:datetimepicker:0.1.2'
+  implementation 'com.vanpra:datetimepicker:0.1.3'
   ...
 }
 ```
 
-# Usage
+## Usage
 
 ### Date and Time Picker
 
@@ -89,7 +89,21 @@ DateTimePicker(
 
 
 
-# To Do
+## Changelog
+
+### [0.1.3] - 2020-07-13
+
+#### Added
+
+- Add onCancel callback parameter to all dialogs
+- Automatically close dialog when cancel is pressed
+
+#### Changed
+
+- Realigned dates with their headings
+- Remove ripple when date is clicked as it wasn't visible and caused lag when scrolling 
+
+## To Do
 
 1. Limit date selection range (ie. min/max date)
 

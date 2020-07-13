@@ -44,9 +44,12 @@ data class SelectedOffset(
  * @param onComplete callback with a LocalTime object when the user completes their input
  */
 @Composable
-fun TimePicker(showing: MutableState<Boolean>,
-               initialTime: LocalTime = LocalTime.now(),
-               onComplete: (LocalTime) -> Unit) {
+fun TimePicker(
+    showing: MutableState<Boolean>,
+    initialTime: LocalTime = LocalTime.now(),
+    onCancel: () -> Unit = {},
+    onComplete: (LocalTime) -> Unit = {}
+) {
     val currentTime = remember { initialTime.truncatedTo(ChronoUnit.MINUTES) }
     val selectedTime = state { currentTime }
 
@@ -60,6 +63,9 @@ fun TimePicker(showing: MutableState<Boolean>,
                     onConfirm = {
                         showing.value = false
                         onComplete(selectedTime.value)
+                    }, onCancel = {
+                        showing.value = false
+                        onCancel()
                     })
             }
         }
