@@ -59,7 +59,11 @@ fun DatePicker(
                         onConfirm = {
                             showing.value = false
                             onComplete(selectedDate.value)
-                        })
+                        },
+                        onCancel = {
+                            showing.value = false        
+                        }
+                )
             }
         }
     }
