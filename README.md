@@ -1,4 +1,6 @@
 # Jetpack Compose Date and Time Picker
+## ANNOUNCEMNET
+Deveplopment will be moving over to: https://github.com/vanpra/compose-material-dialogs
 
 **Current Compose Version: dev14**
 
